@@ -1,0 +1,217 @@
+import java.time.LocalDate;
+
+public class Task {
+    private static int counter = 0; 
+    private final int id;
+    private String description;
+    private String category;
+    private boolean isDone;
+    private final LocalDate creationDate;
+
+    public Task(String description, String category) {
+        this.id = ++counter;
+        this.description = description;
+        this.category = category;
+        this.isDone = false;
+        this.creationDate = LocalDate.now();
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public boolean isDone() {
+        return isDone;
+    }
+
+    public void markAsDone() {
+        this.isDone = true;
+    }
+
+    public LocalDate getCreationDate() {
+        return creationDate;
+    }
+
+    public String toString() {
+        return String.format("ID: %d | Описание: %s | Категория: %s | Статус: %s | Дата создания: %s",
+                id, description, category, (isDone ? "Выполнено" : "Не выполнено"), creationDate);
+    }
+}
+
+import java.util.*;
+
+public class ToDoList {
+    private final ArrayList<Task> tasks = new ArrayList<>();
+    private final HashSet<String> categories = new HashSet<>();
+    private final HashMap<String, List<Task>> tasksByCategory = new HashMap<>();
+
+    public void addTask(String description, String category) {
+        Task task = new Task(description, category);
+        tasks.add(task);
+        categories.add(category);
+
+        tasksByCategory.computeIfAbsent(category, k -> new ArrayList<>()).add(task);
+        System.out.println("Задача успешно добавлена!");
+    }
+
+    public void removeTask(int id) {
+        Iterator<Task> iterator = tasks.iterator();
+        while (iterator.hasNext()) {
+            Task task = iterator.next();
+            if (task.getId() == id) {
+                iterator.remove();
+                tasksByCategory.get(task.getCategory()).remove(task);
+                System.out.println("Задача с ID " + id + " удалена.");
+                return;
+            }
+        }
+        System.out.println("Задача с ID " + id + " не найдена.");
+    }
+
+    public void markTaskAsDone(int id) {
+        for (Task task : tasks) {
+            if (task.getId() == id) {
+                task.markAsDone();
+                System.out.println("Задача с ID " + id + " отмечена как выполненная.");
+                return;
+            }
+        }
+        System.out.println("Задача с ID " + id + " не найдена.");
+    }
+
+    public void displayAllTasks() {
+        if (tasks.isEmpty()) {
+            System.out.println("Список задач пуст.");
+            return;
+        }
+        System.out.println("Список всех задач:");
+        for (Task task : tasks) {
+            System.out.println(task);
+        }
+    }
+
+    public void searchTasks(String keyword) {
+        boolean found = false;
+        for (Task task : tasks) {
+            if (task.getDescription().contains(keyword)) {
+                System.out.println(task);
+                found = true;
+            }
+        }
+        if (!found) {
+            System.out.println("Задачи с ключевым словом \"" + keyword + "\" не найдены.");
+        }
+    }
+
+    public void displayCategories() {
+        if (categories.isEmpty()) {
+            System.out.println("Категории отсутствуют.");
+            return;
+        }
+        System.out.println("Уникальные категории:");
+        for (String category : categories) {
+            System.out.println("- " + category);
+        }
+    }
+
+    // Вывод задач по категориям
+    public void displayTasksByCategory() {
+        if (tasksByCategory.isEmpty()) {
+            System.out.println("Нет задач для отображения по категориям.");
+            return;
+        }
+        for (String category : tasksByCategory.keySet()) {
+            System.out.println("Категория: " + category);
+            for (Task task : tasksByCategory.get(category)) {
+                System.out.println("  " + task);
+            }
+        }
+    }
+
+    // Статистика задач
+    public void displayStatistics() {
+        long doneCount = tasks.stream().filter(Task::isDone).count();
+        long notDoneCount = tasks.size() - doneCount;
+
+        System.out.println("Статистика задач:");
+        System.out.println("Выполненные: " + doneCount);
+        System.out.println("Не выполненные: " + notDoneCount);
+    }
+}
+
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        ToDoList toDoList = new ToDoList();
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\nМеню:");
+            System.out.println("1. Добавить задачу");
+            System.out.println("2. Удалить задачу");
+            System.out.println("3. Отметить задачу как выполненную");
+            System.out.println("4. Показать все задачи");
+            System.out.println("5. Показать задачи по категориям");
+            System.out.println("6. Показать уникальные категории");
+            System.out.println("7. Поиск задач по ключевым словам");
+            System.out.println("8. Показать статистику задач");
+            System.out.println("9. Выход");
+            System.out.print("Выберите опцию: ");
+
+            int option = scanner.nextInt();
+            scanner.nextLine(); // Очистка буфера
+
+            switch (option) {
+                case 1 -> {
+                    System.out.print("Введите описание задачи: ");
+                    String description = scanner.nextLine();
+                    System.out.print("Введите категорию задачи: ");
+                    String category = scanner.nextLine();
+                    toDoList.addTask(description, category);
+                }
+                case 2 -> {
+                    System.out.print("Введите ID задачи для удаления: ");
+                    int id = scanner.nextInt();
+                    toDoList.removeTask(id);
+                }
+                case 3 -> {
+                    System.out.print("Введите ID задачи для отметки как выполненной: ");
+                    int id = scanner.nextInt();
+                    toDoList.markTaskAsDone(id);
+                }
+                case 4 -> toDoList.displayAllTasks();
+                case 5 -> toDoList.displayTasksByCategory();
+                case 6 -> toDoList.displayCategories();
+                case 7 -> {
+                    System.out.print("Введите ключевое слово для поиска: ");
+                    String keyword = scanner.nextLine();
+                    toDoList.searchTasks(keyword);
+                }
+                case 8 -> toDoList.displayStatistics();
+                case 9 -> {
+                    System.out.println("Выход из программы.");
+                    scanner.close();
+                    return;
+                }
+                default -> System.out.println("Неверная опция! Попробуйте снова.");
+            }
+        }
+    }
+}

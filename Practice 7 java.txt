@@ -1,0 +1,154 @@
+public class MenuItem {
+    private String name;
+    private double price;
+    private String category;
+
+    public MenuItem(String name, double price, String category) {
+        this.name = name;
+        this.price = price;
+        this.category = category;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    @Override
+    public String toString() {
+        return name + " - " + price + " тг (" + category + ")";
+    }
+}
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Order {
+    private static int orderCounter = 0;
+    private int orderId;
+    private List<MenuItem> items;
+
+    public Order() {
+        this.orderId = ++orderCounter;
+        this.items = new ArrayList<>();
+    }
+
+    public int getOrderId() {
+        return orderId;
+    }
+
+    public List<MenuItem> getItems() {
+        return items;
+    }
+
+    public void addItem(MenuItem item) {
+        items.add(item);
+    }
+
+    public double calculateTotal() {
+        return items.stream().mapToDouble(MenuItem::getPrice).sum();
+    }
+}
+import java.util.ArrayList;
+import java.util.List;
+
+public class Customer {
+    private String name;
+    private String phone;
+    private List<Order> orderHistory;
+
+    public Customer(String name, String phone) {
+        this.name = name;
+        this.phone = phone;
+        this.orderHistory = new ArrayList<>();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public List<Order> getOrderHistory() {
+        return orderHistory;
+    }
+
+    public void addOrder(Order order) {
+        orderHistory.add(order);
+    }
+}
+import java.util.List;
+
+public interface ICafe {
+    void addMenuItem(MenuItem item);
+    void removeMenuItem(String name);
+    List<MenuItem> getMenuItems();
+    Order createOrder(Customer customer, List<MenuItem> items);
+}
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class CafeApp {
+    public static void main(String[] args) {
+        Cafe cafe = new Cafe();
+        cafe.addMenuItem(new MenuItem("Кофе", 950.0, "Напитки"));
+        cafe.addMenuItem(new MenuItem("Сэндвич", 1900.0, "Еда"));
+        cafe.addMenuItem(new MenuItem("Чизкейк", 1230.0, "Десерт"));
+
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Добро пожаловать в кафе!");
+        System.out.print("Введите имя клиента: ");
+        String name = scanner.nextLine();
+        System.out.print("Введите телефон клиента: ");
+        String phone = scanner.nextLine();
+        Customer customer = new Customer(name, phone);
+
+        List<MenuItem> orderItems = new ArrayList<>();
+        boolean ordering = true;
+
+        while (ordering) {
+            System.out.println("\nМеню:");
+            for (MenuItem item : cafe.getMenuItems()) {
+                System.out.println(item);
+            }
+            System.out.print("Введите название блюда для добавления в заказ (или 'готово' для завершения): ");
+            String itemName = scanner.nextLine();
+
+            if (itemName.equalsIgnoreCase("готово")) {
+                ordering = false;
+            } else {
+                boolean found = false;
+                for (MenuItem item : cafe.getMenuItems()) {
+                    if (item.getName().equalsIgnoreCase(itemName)) {
+                        orderItems.add(item);
+                        System.out.println(itemName + " добавлен в заказ.");
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    System.out.println("Блюдо с таким названием не найдено!");
+                }
+            }
+        }
+
+        Order order = cafe.createOrder(customer, orderItems);
+        System.out.println("\nID заказа: " + order.getOrderId());
+        System.out.println("Заказанные блюда:");
+        for (MenuItem item : order.getItems()) {
+            System.out.println(item);
+        }
+        System.out.printf("Общая стоимость (тг): %.2f%n", order.calculateTotal());
+        scanner.close();
+    }
+}
